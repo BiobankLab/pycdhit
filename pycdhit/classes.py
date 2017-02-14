@@ -199,6 +199,8 @@ class cdhit_set(object):
         self.all_non_zeros = [] #labels where there are all non 0 in columns
         self.zeros = {}
         self.nzeros = {}
+        self.cols_dropped = []
+        self.filter_value = None
         #clusters
         
     #def get_non_zeros(self):
@@ -222,7 +224,10 @@ class cdhit_set(object):
         for r in self.result_list[1:]:
             labels = labels & set(r.get_thold_labels(0, 1))
         self.all_non_zeros = list(labels)
-
+        
+    def set_filter(self, value):
+        self.filter_value = value
+        
 
     def to_df(self, skip_zeros = None, skip_non_zeros = None):
         #print len(self.result_list)
@@ -237,6 +242,13 @@ class cdhit_set(object):
             df = df.drop(self.all_zeros, 1)
         if skip_non_zeros:
             df = df.drop(self.all_non_zeros, 1)
+        if self.filter_value:
+            for column in df:
+                if abs(float(df[column].max()) - float(df[column].min())) <= float(self.filter_value):
+                    del df[column]
+                    self.cols_dropped.append(str(column))
+                    #print 'column deleted: '+str(column)
+                    
         return df
 
     def make_dendrogram(self, df, fig_size, font_top_size=1):
