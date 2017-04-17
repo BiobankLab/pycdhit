@@ -2,6 +2,7 @@ import unittest
 #from pycdhit import cdhit_read
 #from pycdhit import cdhit_cluster
 from pycdhit import *
+import os
 
 
 
@@ -9,9 +10,24 @@ from pycdhit import *
 class TestCdhit(unittest.TestCase):
     
     def setUp(self):
-        pass
-        #add some files in future :)
+        with open('test-1.clstr', 'w') as f:
+            f.write(">Cluster 0\n"
+                    "0	900aa, >test3... *\n"
+                    ">Cluster 1\n"
+                    "0	800aa, >test1... *\n"
+                    "1	800aa, >s1-test1... at 90.00%\n"
+                    ">Cluster 2\n"
+                    "0	700aa, >test5... *\n"
+                    "1	700aa, >s1-test5... at 73.00%\n"
+                    ">Cluster 3\n"
+                    "0	500aa, >test2... *\n"
+                    "1	500aa, >s1-test2... at 82.00%\n"
+                    ">Cluster 4\n"
+                    "0	100aa, >test4... *\n"
+                    "1	100aa, >s1-test4... at 73.00%")
     
+    def tearDown(self):
+        os.remove('test-1.clstr')
     
     def test_read(self):
         c = cdhit_read()
@@ -57,26 +73,43 @@ class TestCdhit(unittest.TestCase):
         self.assertEqual([], cr.data)
         self.assertEqual({'sample':None, 'data':[]},cr.to_json())
         cr.append(cdhit_cluster('Cluster 0', [cdhit_read('test3', '*', '900aa')], 'test3'))
-        #self.assertEqual(cdhit_cluster('Cluster 0', ['test3', '*', '900aa'], 'test3'), cr.data)
-        print cr.to_json()
-        print cdhit_cluster('Cluster 0', [cdhit_read('test3', '*', '900aa')], 'test3').to_json()
-        cr.append(cdhit_cluster('Cluster 1', [cdhit_read('test1', '*', '800aa'), cdhit_read('s1-test1', 90, '800aa')], 'test1'))
-        '''
-        >Cluster 0
-0	900aa, >test3... *
->Cluster 1
-0	800aa, >test1... *
-1	800aa, >s1-test1... at 90.00%
->Cluster 2
-0	700aa, >test5... *
-1	700aa, >s1-test5... at 73.00%
->Cluster 3
-0	500aa, >test2... *
-1	500aa, >s1-test2... at 82.00%
->Cluster 4
-0	100aa, >test4... *
-1	100aa, >s1-test4... at 73.00%
-'''
+
+        cr.append(cdhit_cluster('Cluster 1', [cdhit_read('test1', '*', '800aa'), cdhit_read('s1-test1', '90.00', '800aa')], 'test1'))
+        cr.append(cdhit_cluster('Cluster 2', [cdhit_read('test5', '*', '700aa'), cdhit_read('s1-test5', '73.00', '700aa')], 'test5'))
+        cr.append(cdhit_cluster('Cluster 3', [cdhit_read('test2', '*', '500aa'), cdhit_read('s1-test2', '82.00', '500aa')], 'test2'))
+        cr.append(cdhit_cluster('Cluster 4', [cdhit_read('test4', '*', '100aa'), cdhit_read('s1-test4', '73.00', '100aa')], 'test4'))
+        tcr = cdhit_result()
+        tcr.load_from_file('test-1.clstr')
+        self.assertEqual(tcr.to_json(), cr.to_json())
+        
+    def test_result_to_df(self):
+        cr = cdhit_result('test-df')
+        cr.append(cdhit_cluster('Cluster 1', [cdhit_read('test1', '*', '800aa'), cdhit_read('s1-test1', 90.00, '800aa')], 'test1'))
+        cr.append(cdhit_cluster('Cluster 2', [cdhit_read('test5', '*', '700aa'), cdhit_read('s1-test5', 73.00, '700aa')], 'test5'))
+        cr.append(cdhit_cluster('Cluster 3', [cdhit_read('test2', '*', '500aa'), cdhit_read('s1-test2', 82.00, '500aa')], 'test2'))
+        cr.append(cdhit_cluster('Cluster 4', [cdhit_read('test4', '*', '100aa'), cdhit_read('s1-test4', 73.00, '100aa')], 'test4'))
+
+        df = pd.DataFrame(data={'test1': 90, 'test5': 73, 'test2': 82, 'test4': 73}, index=['test-df'])
+        print df
+        print '\n----\n'
+        print cr.to_df()
+        self.assertEqual(df, cr.to_df())
+        
+    def test_result_get_th_lables(self):
+        cr = cdhit_result('test-th')
+        cr.append(cdhit_cluster('Cluster 1', [cdhit_read('test1', '*', '800aa'), cdhit_read('s1-test1', 90.00, '800aa')], 'test1'))
+        cr.append(cdhit_cluster('Cluster 2', [cdhit_read('test5', '*', '700aa'), cdhit_read('s1-test5', 73.00, '700aa')], 'test5'))
+        cr.append(cdhit_cluster('Cluster 3', [cdhit_read('test2', '*', '500aa'), cdhit_read('s1-test2', 82.00, '500aa')], 'test2'))
+        cr.append(cdhit_cluster('Cluster 4', [cdhit_read('test4', '*', '100aa'), cdhit_read('s1-test4', 73.00, '100aa')], 'test4'))
+        self.assertEqual(['test1', 'test2'],cr.get_thold_labels(80,1))
+        self.assertEqual(['test5', 'test4'],cr.get_thold_labels(80,-1))
+        cr.append(cdhit_cluster('Cluster 5', [cdhit_read('test6', '*', '100aa')], 'test6'))
+        self.assertEqual(['test5', 'test4', 'test6'],cr.get_thold_labels(80,-1))
+        self.assertEqual(['test6'],cr.get_thold_labels(0,-1))
+        tcr = cdhit_result()
+        tcr.load_from_file('test-1.clstr')
+        self.assertEqual(['test1', 'test2'],tcr.get_thold_labels(80,1))
+
         
         
     

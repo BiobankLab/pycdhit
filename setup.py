@@ -9,6 +9,7 @@ setup(name='pycdhit',
       license='Apache 2.0',
       packages=['pycdhit'],
       install_requires=[
+        'scipy', 'numpy', 'pandas', 'matplotlib'
       ],
       scripts=[],
       zip_safe=False)

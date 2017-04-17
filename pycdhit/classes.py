@@ -8,13 +8,12 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage
 from scipy.cluster.hierarchy import fcluster
 from scipy.cluster.hierarchy import dendrogram
-# from scipy.cluster import hierarchy #do we need this?
-# import matplotlib #do we need this?
 import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt
 import logging
 import string
 from fatool import *
+from decimal import *
 
 
 class cdhit_read(object):
@@ -66,6 +65,7 @@ class cdhit_cluster(object):
             """reads list of reads contained by cluster in cd-hit file"""
         else:
             self.reads = []
+        getcontext().prec = 2
     
     def to_json(self):
         """returns json representation of cd-hit cluster"""
@@ -81,9 +81,9 @@ class cdhit_cluster(object):
     def get_single_value(self):
         """returns match score of first read if read exists, else 0"""
         if len(self.reads) > 1:
-            return self.reads[1].pb
+            return Decimal(self.reads[1].pb)
         else:
-            return 0
+            return Decimal(0)
 
     def get_label(self):
         """returns label of cluster in this case gene_name"""
@@ -123,7 +123,7 @@ class cdhit_result(object):
 
     def get_thold_labels(self, th, mono):
         """
-        return labels thats score mets usere defined condition defined in th and mono
+        return labels thats score mets user defined condition defined in th and mono
         th is vlaue treshold
         mono is to specify whether labels with values:
         greater than threshold will be returned (mono >= 0)
@@ -202,8 +202,8 @@ class cdhit_set(object):
         self.filter_value = None
 
     def append(self, cdr):
-        print 'appending result:'
-        print cdr
+        #print 'appending result:'
+        #print cdr
         self.result_list.append(cdr)
 
     def analyze(self):
