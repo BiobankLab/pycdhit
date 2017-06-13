@@ -245,7 +245,7 @@ class cdhit_set(object):
                     # print 'column deleted: '+str(column)
         return df
 
-    def make_dendrogram(self, df, fig_size, font_top_size=1):
+    def make_dendrogram(self, df, fig_size, font_top_size=1, font_left_size=6):
         '''
         preparing and priniting to file dendrogram basing on cdhit_set data
         df data frame with data from cdht_set
@@ -296,6 +296,7 @@ class cdhit_set(object):
         plt.xticks(range(len(list(df_rowclust.columns))), list(df_rowclust.columns), rotation=90)  # rotation=90#range(len(list(df_rowclust.columns)))
         plt.yticks(range(len(list(df_rowclust.index))), list(df_rowclust.index))
         plt.setp(axm.get_xticklabels()[::1], fontsize=int(font_top_size))
+        plt.setp(axm.get_yticklabels()[::1], fontsize=int(font_left_size))
 
         return plt
 
